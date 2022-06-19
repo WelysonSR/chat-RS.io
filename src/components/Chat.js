@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
+
+const myId = uuidv4();
+const socket = io('http://localhost:8080', { transports : ['websocket'] });
+socket.on('connect', () => console.log('[IO] Connected to server'));
 
 function Chat() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    const newMennsage = (message) => {
+      setMessages([...messages, message]);
+    }
+    socket.on('chat.message', newMennsage);
+    return () => {
+      socket.off('chat.message', newMennsage);
+    }
+  }, [messages]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim()) {
-      setMessages([...messages, {id: 1 ,message}]);
+      socket.emit('chat.message', {
+        id: myId,
+        message,
+      });
       setMessage('');
     }
   };
@@ -15,9 +34,9 @@ function Chat() {
   return (
     <main className="container">
       <ul className="list">
-        {messages.map((m) => (
-          <li key={ m.id } className="list__item list__item--mine">
-            <span className="message message--mine">
+        {messages.map((m, i) => (
+          <li key={ `${m.id}-${i}` } className={`list__item list__item--${m.id === myId ? 'mine' : 'other'}`}>
+            <span className={`message message--${m.id === myId ? 'mine' : 'other'}`}>
               {m.message}
             </span>
           </li>
