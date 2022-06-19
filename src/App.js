@@ -1,8 +1,7 @@
+import Chat from "./components/Chat";
+
 function App() {
-  return (
-    <div>
-    </div>
-  );
+  return <Chat />;
 }
 
 export default App;
